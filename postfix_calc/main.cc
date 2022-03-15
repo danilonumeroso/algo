@@ -8,10 +8,6 @@ bool is_arithmetic_symbol(char c) {
   return c == '*' || c == '+' || c == '/' || c == '-';
 }
 
-float sum(float a, float b) {
-  return a+b;
-}
-
 int main() {
   std::string postfix_expression;
   std::stack<float> stack;
