@@ -42,7 +42,7 @@ def test_against(other_fn, num_samples=1):
 
 if __name__ == "__main__":
     print("Performing Value Iteration...")
-    v_fn = value_iteration()
+    v_fn = value_iteration(verbose=True)
     policy = extract_policy(v_fn)
 
     num_samples = 100
@@ -50,4 +50,4 @@ if __name__ == "__main__":
     test_against(random_player, num_samples)
 
     print("Play against the agent (Agent is X)!")
-    test_against(human_player, num_samples=5) 
+    test_against(human_player, num_samples=5)

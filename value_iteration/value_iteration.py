@@ -1,7 +1,5 @@
 import numpy as np
 from collections import defaultdict
-from copy import deepcopy
-from statistics import mean
 from logic import is_winner, is_draw, is_terminal, is_not_terminal, is_x_turn, get_actions
 
 def all_possible_states():
@@ -26,10 +24,13 @@ def apply_action(action, state):
 
 def reward_fn(state):
     if is_winner(state, 1):
-        return 0
+        return 1
 
     if is_winner(state, -1):
-        return 1
+        return -1
+
+    if is_draw(state):
+        return 0
 
     return 0.1
 
@@ -45,22 +46,16 @@ def value_iteration(discount=1.0, epsilon=1e-5, verbose=False):
 
     def one_step_value_iteration():
         delta = 0
-        i=0
         for s in filter(is_not_terminal, states):
             old_v = v_fn[tuple(s)]
-            values = []
 
-            for action in get_actions(s):
-                next_s = apply_action(action, s) if is_x_turn(s) else np.copy(s)
+            # Switching between maximisation and minimisation is essential to learn
+            # the right values both when playing as X and O
+            aggr_fn = max if is_x_turn(s) else min
 
-                if is_terminal(next_s):
-                    action_value = reward_fn(next_s)
-                else:
-                    action_value = mean([discount*v_fn[tuple(apply_action(next_a, next_s))] for next_a in get_actions(next_s)])
+            # Value Iteration step
+            v_fn[tuple(s)] = aggr_fn([reward_fn(next_s) + discount*v_fn[tuple(next_s)] for next_s in map(lambda a: apply_action(a, s), get_actions(s))])
 
-                values.append(action_value)
-
-            v_fn[tuple(s)] = min(values)
             delta = max(delta, abs(v_fn[tuple(s)] - old_v))
         return delta
 
@@ -80,19 +75,14 @@ def extract_policy(v_fn):
     def choose_action(s):
         values = []
         actions = get_actions(s)
-        for action in actions:
-            next_s = apply_action(action, s)
 
-            if is_terminal(next_s):
-                action_value = reward_fn(next_s)
-            else:
-                action_value = mean([v_fn[tuple(apply_action(next_a, next_s))] for next_a in get_actions(next_s)])
+        aggr_fn = np.argmax if is_x_turn(s) else np.argmin
+        values = [v_fn[tuple(next_s)] for next_s in map(lambda a: apply_action(a, s), get_actions(s))]
 
-            values.append(action_value)
-
-        return actions[np.argmin(values)]
+        return actions[aggr_fn(values)]
 
     policy = defaultdict(int)
+
     for s in v_fn:
         s_vec = np.array(s)
         if is_terminal(s_vec):
