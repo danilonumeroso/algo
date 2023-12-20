@@ -42,7 +42,7 @@ def test_against(other_fn, num_samples=1):
 
 if __name__ == "__main__":
     print("Performing Value Iteration...")
-    v_fn = value_iteration(verbose=True)
+    v_fn = value_iteration(verbose=False)
     policy = extract_policy(v_fn)
 
     num_samples = 100
